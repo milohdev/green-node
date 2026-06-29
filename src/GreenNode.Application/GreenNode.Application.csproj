@@ -8,6 +8,8 @@
     <PackageReference Include="FluentValidation" Version="11.*" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.*" />
     <PackageReference Include="MediatR" Version="12.*" />
+    <PackageReference Include="BCrypt.Net-Next" Version="4.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.*" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -1,2 +1,7 @@
 namespace GreenNode.Domain.Enums;
-public enum ProjectStatus { }
+
+public enum ProjectStatus
+{
+    Active,
+    Completed
+}
