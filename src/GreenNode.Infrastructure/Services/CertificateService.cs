@@ -1,4 +1,5 @@
 using GreenNode.Application.Common.Interfaces;
+using GreenNode.Application.Common.Models;
 using Microsoft.Extensions.Logging;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
@@ -9,7 +10,7 @@ namespace GreenNode.Infrastructure.Services;
 public class CertificateService(IStorageService storageService, ILogger<CertificateService> logger)
     : ICertificateService
 {
-    public async Task<string> GenerateCertificateAsync(CertificateData data)
+    public async Task<string> GenerateCertificateAsync(CertificateData data, CancellationToken ct = default)
     {
         try
         {

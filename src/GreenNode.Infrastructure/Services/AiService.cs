@@ -2,13 +2,14 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using GreenNode.Application.Common.Interfaces;
+using GreenNode.Application.Common.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace GreenNode.Infrastructure.Services;
 
 public class AiService(HttpClient httpClient, IConfiguration configuration, ILogger<AiService> logger)
-    : IAiService
+    : IClaudeAiService
 {
     private const string ApiUrl = "https://api.anthropic.com/v1/messages";
     private const string Model = "claude-3-5-haiku-20241022";
@@ -38,7 +39,9 @@ public class AiService(HttpClient httpClient, IConfiguration configuration, ILog
             .GetString() ?? string.Empty;
     }
 
-    public async Task<string> GenerateQuoteProposalAsync(string sector, int numberOfTrees, string territory)
+    public async Task<string> GenerateQuoteProposalAsync(
+        string sector, int numberOfTrees, string territory,
+        CancellationToken ct = default)
     {
         try
         {
@@ -69,7 +72,8 @@ public class AiService(HttpClient httpClient, IConfiguration configuration, ILog
         }
     }
 
-    public async Task<EvidenceValidationResult> ValidateEvidencePhotoAsync(string base64Image, string mediaType)
+    public async Task<EvidenceValidationResult> ValidateEvidencePhotoAsync(string base64Image, string mediaType, CancellationToken ct = default)
+
     {
         try
         {
@@ -143,7 +147,8 @@ public class AiService(HttpClient httpClient, IConfiguration configuration, ILog
 
     public async Task<string> GetProjectAdvisorResponseAsync(
         string companyName, string sector, int numberOfTrees,
-        int validatedTrees, decimal progress, string userQuestion)
+        int validatedTrees, decimal progress, string userQuestion,
+        CancellationToken ct = default)
     {
         try
         {

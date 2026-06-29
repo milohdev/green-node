@@ -34,7 +34,7 @@ public static class InfrastructureServiceExtensions
         services.AddHttpClient<AiService>();
 
         // Servicios
-        services.AddScoped<IAiService, AiService>();
+        services.AddScoped<IClaudeAiService, AiService>();
         services.AddScoped<IStorageService, StorageService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<ICertificateService, CertificateService>();

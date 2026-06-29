@@ -15,7 +15,7 @@ public class StorageService(IAmazonS3 amazonS3, IConfiguration configuration, IL
     private string CertificatesBucket => configuration["AWS:CertificatesBucket"]
         ?? throw new InvalidOperationException("AWS:CertificatesBucket no configurado.");
 
-    public async Task<string> UploadEvidenceAsync(Stream fileStream, string fileName, string contentType)
+    public async Task<string> UploadEvidenceAsync(Stream fileStream, string fileName, string contentType, CancellationToken ct = default)
     {
         try
         {
@@ -38,7 +38,7 @@ public class StorageService(IAmazonS3 amazonS3, IConfiguration configuration, IL
         }
     }
 
-    public async Task<string> UploadCertificateAsync(Stream pdfStream, string fileName)
+    public async Task<string> UploadCertificateAsync(Stream pdfStream, string fileName, CancellationToken ct = default)
     {
         try
         {
@@ -61,7 +61,7 @@ public class StorageService(IAmazonS3 amazonS3, IConfiguration configuration, IL
         }
     }
 
-    public async Task<string> GeneratePresignedUrlAsync(string key, string bucketType)
+    public async Task<string> GeneratePresignedUrlAsync(string key, string bucketType, CancellationToken ct = default)
     {
         var bucket = bucketType == "certificados" ? CertificatesBucket : EvidencesBucket;
         var request = new GetPreSignedUrlRequest
@@ -74,7 +74,7 @@ public class StorageService(IAmazonS3 amazonS3, IConfiguration configuration, IL
         return await Task.FromResult(amazonS3.GetPreSignedURL(request));
     }
 
-    public async Task DeleteFileAsync(string key, string bucketType)
+    public async Task DeleteFileAsync(string key, string bucketType, CancellationToken ct = default)
     {
         try
         {

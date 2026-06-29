@@ -33,7 +33,7 @@ public class EmailService(
         await sesClient.SendEmailAsync(request);
     }
 
-    public async Task SendQuoteReceivedEmailAsync(string toEmail, string companyName, Guid quoteId)
+    public async Task SendQuoteReceivedEmailAsync(string toEmail, string companyName, Guid quoteId, CancellationToken ct = default)
     {
         try
         {
@@ -52,7 +52,7 @@ public class EmailService(
         }
     }
 
-    public async Task SendQuoteApprovedEmailAsync(string toEmail, string companyName, Guid projectId)
+    public async Task SendQuoteApprovedEmailAsync(string toEmail, string companyName, Guid projectId, CancellationToken ct = default)
     {
         try
         {
@@ -71,7 +71,7 @@ public class EmailService(
         }
     }
 
-    public async Task SendQuoteRejectedEmailAsync(string toEmail, string companyName, string reason)
+    public async Task SendQuoteRejectedEmailAsync(string toEmail, string companyName, string reason, CancellationToken ct = default)
     {
         try
         {
@@ -90,7 +90,7 @@ public class EmailService(
         }
     }
 
-    public async Task SendCertificateReadyEmailAsync(string toEmail, string companyName)
+    public async Task SendCertificateReadyEmailAsync(string toEmail, string companyName, CancellationToken ct = default)
     {
         try
         {
