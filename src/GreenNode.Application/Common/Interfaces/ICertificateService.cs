@@ -1,15 +1,10 @@
-namespace GreenNode.Application.Common.Interfaces;
+using GreenNode.Application.Common.Models;
 
-public record CertificateData(
-    string CompanyName,
-    string TerritoryName,
-    int NumberOfTrees,
-    decimal Co2EstimatedKg,
-    string VerificationCode,
-    DateTime IssuedAt
-);
+namespace GreenNode.Application.Common.Interfaces;
 
 public interface ICertificateService
 {
-    Task<string> GenerateCertificateAsync(CertificateData data);
+    Task<string> GenerateCertificateAsync(
+        CertificateData data,
+        CancellationToken ct = default);
 }

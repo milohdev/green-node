@@ -1,2 +1,5 @@
+using MediatR;
+
 namespace GreenNode.Application.Features.Dashboard.Queries.GetDashboardSummary;
-public class GetDashboardSummaryQuery { }
+
+public record GetDashboardSummaryQuery() : IRequest<DashboardSummaryDto>;
