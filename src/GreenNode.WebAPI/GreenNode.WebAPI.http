@@ -1,0 +1,6 @@
+@GreenNode.WebAPI_HostAddress = http://localhost:5195
+
+GET {{GreenNode.WebAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,0 +1,29 @@
+# Build outputs
+bin/
+obj/
+
+# Environment secrets (NEVER commit the real .env)
+.env
+
+# Visual Studio / Rider / VS Code
+.vs/
+.idea/
+*.user
+*.suo
+*.DotSettings.user
+.vscode/
+
+# Rider
+*.sln.iml
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

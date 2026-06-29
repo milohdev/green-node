@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/GreenNode.Application/GreenNode.Application.csproj" />
+    <Project Path="src/GreenNode.Domain/GreenNode.Domain.csproj" />
+    <Project Path="src/GreenNode.Infrastructure/GreenNode.Infrastructure.csproj" />
+    <Project Path="src/GreenNode.WebAPI/GreenNode.WebAPI.csproj" />
+  </Folder>
+</Solution>
