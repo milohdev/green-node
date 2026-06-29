@@ -1,5 +1,6 @@
 using GreenNode.Domain.Common;
 using GreenNode.Domain.Enums;
+using GreenNode.Domain.Exceptions;
 
 namespace GreenNode.Domain.Entities;
 
@@ -13,7 +14,6 @@ public class Quote : BaseEntity
     public string? AiProposal { get; private set; }
     public string? RejectionReason { get; private set; }
     public decimal TotalPrice { get; private set; }
-
     public Company Company { get; private set; } = null!;
     public Territory Territory { get; private set; } = null!;
 
@@ -32,13 +32,25 @@ public class Quote : BaseEntity
 
     protected Quote() { }
 
-    public void Approve() => Status = QuoteStatus.Approved;
+    public void Approve()
+    {
+        if (Status != QuoteStatus.Pending)
+            throw new DomainException("Solo se puede aprobar una cotización en estado Pending.");
+        Status = QuoteStatus.Approved;
+    }
 
     public void Reject(string reason)
     {
+        if (Status != QuoteStatus.Pending)
+            throw new DomainException("Solo se puede rechazar una cotización en estado Pending.");
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new DomainException("El motivo de rechazo es obligatorio.");
         Status = QuoteStatus.Rejected;
         RejectionReason = reason;
     }
 
-    public void SetAiProposal(string proposal) => AiProposal = proposal;
+    public void SetAiProposal(string proposal)
+    {
+        AiProposal = proposal;
+    }
 }

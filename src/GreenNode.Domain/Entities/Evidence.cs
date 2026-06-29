@@ -10,7 +10,6 @@ public class Evidence : BaseEntity
     public decimal? AiConfidence { get; private set; }
     public int? AiEstimatedTrees { get; private set; }
     public string? AiObservations { get; private set; }
-
     public Project Project { get; private set; } = null!;
 
     public Evidence(Guid projectId, string photoUrl)

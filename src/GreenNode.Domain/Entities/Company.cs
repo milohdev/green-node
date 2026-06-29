@@ -9,6 +9,7 @@ public class Company : BaseEntity
     public string Phone { get; private set; } = null!;
     public string Sector { get; private set; } = null!;
     public Guid UserId { get; private set; }
+    public User User { get; private set; } = null!;
 
     public Company(string name, string email, string phone, string sector, Guid userId)
     {

@@ -12,6 +12,7 @@ public class Certificate : BaseEntity
     public string PdfUrl { get; private set; } = null!;
     public string VerificationCode { get; private set; } = null!;
     public DateTime IssuedAt { get; private set; }
+    public Project Project { get; private set; } = null!;
 
     public Certificate(Guid projectId, string companyName, string territoryName,
         int numberOfTrees, decimal co2EstimatedKg, string pdfUrl, string verificationCode)

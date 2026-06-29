@@ -1,5 +1,6 @@
 using GreenNode.Domain.Common;
 using GreenNode.Domain.Enums;
+using GreenNode.Domain.Exceptions;
 
 namespace GreenNode.Domain.Entities;
 
@@ -14,7 +15,6 @@ public class Project : BaseEntity
     public decimal ProgressPercentage { get; private set; }
     public ProjectStatus Status { get; private set; }
     public string? CertificateUrl { get; private set; }
-
     public Quote Quote { get; private set; } = null!;
     public Company Company { get; private set; } = null!;
     public Territory Territory { get; private set; } = null!;
@@ -40,13 +40,18 @@ public class Project : BaseEntity
 
     public void UpdateProgress(int additionalValidatedTrees)
     {
+        if (additionalValidatedTrees < 0)
+            throw new DomainException("Los árboles validados no pueden ser negativos.");
         ValidatedTrees += additionalValidatedTrees;
         ProgressPercentage = NumberOfTrees > 0
-            ? Math.Min((decimal)ValidatedTrees / NumberOfTrees * 100, 100)
-            : 0;
-        if (ProgressPercentage >= 100)
+            ? Math.Min(100m, (decimal)ValidatedTrees / NumberOfTrees * 100m)
+            : 0m;
+        if (ProgressPercentage >= 100m)
             Status = ProjectStatus.Completed;
     }
 
-    public void SetCertificateUrl(string url) => CertificateUrl = url;
+    public void SetCertificateUrl(string url)
+    {
+        CertificateUrl = url;
+    }
 }
