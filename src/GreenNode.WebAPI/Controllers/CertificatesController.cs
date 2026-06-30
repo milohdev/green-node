@@ -1,5 +1,7 @@
 using System.Security.Claims;
 using GreenNode.Application.Features.Certificates.Commands.GenerateCertificate;
+using GreenNode.Application.Features.Certificates.DTOs;
+using GreenNode.Application.Features.Certificates.Queries.GetCertificateByProject;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,12 +13,13 @@ namespace GreenNode.WebAPI.Controllers;
 [Authorize]
 public class CertificatesController(ISender sender) : ControllerBase
 {
-    // GetCertificateByProjectQuery es stub en Application — pendiente de implementación por Cami
     [HttpGet("{projectId:guid}")]
-    public IActionResult GetByProject(Guid projectId)
+    public async Task<IActionResult> GetByProject(Guid projectId, CancellationToken ct)
     {
-        return StatusCode(StatusCodes.Status501NotImplemented,
-            new { message = "Pendiente: GetCertificateByProjectQuery no está implementado aún en Application." });
+        Guid? callerCompanyId = User.IsInRole("Admin") ? null : GetCompanyId();
+        CertificateDto result = await sender.Send(
+            new GetCertificateByProjectQuery(projectId, callerCompanyId), ct);
+        return Ok(new { data = result, message = "Certificado obtenido." });
     }
 
     [HttpPost("{projectId:guid}")]
@@ -26,4 +29,7 @@ public class CertificatesController(ISender sender) : ControllerBase
         string pdfUrl = await sender.Send(new GenerateCertificateCommand(projectId), ct);
         return Ok(new { data = new { url = pdfUrl }, message = "Certificado generado exitosamente." });
     }
+
+    private Guid GetCompanyId() =>
+        Guid.Parse(User.FindFirstValue("companyId")!);
 }
