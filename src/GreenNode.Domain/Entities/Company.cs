@@ -22,5 +22,13 @@ public class Company : BaseEntity
         UserId = userId;
     }
 
+    // Implementado por Juan como fallback temporal — Cami debe revisar antes de merge a develop
+    public void Update(string name, string phone, string sector)
+    {
+        Name = name;
+        Phone = phone;
+        Sector = sector;
+    }
+
     protected Company() { }
 }
