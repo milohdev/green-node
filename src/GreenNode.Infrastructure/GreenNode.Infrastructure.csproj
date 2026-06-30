@@ -10,12 +10,15 @@
     <PackageReference Include="AWSSDK.S3" Version="3.*" />
     <PackageReference Include="AWSSDK.SimpleEmail" Version="3.*" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.*" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.*" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.*" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.*">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.9" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.*" />
+    <PackageReference Include="QuestPDF" Version="2025.*" />
   </ItemGroup>
 
   <PropertyGroup>

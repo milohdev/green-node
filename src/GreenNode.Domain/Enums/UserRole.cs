@@ -1,2 +1,7 @@
 namespace GreenNode.Domain.Enums;
-public enum UserRole { }
+
+public enum UserRole
+{
+    Admin,
+    Company
+}
