@@ -1,6 +1,7 @@
 # Build outputs
 bin/
 obj/
+greennode-app/
 
 # Environment secrets (NEVER commit the real .env)
 .env
