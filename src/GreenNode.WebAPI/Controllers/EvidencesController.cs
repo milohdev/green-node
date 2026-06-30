@@ -21,15 +21,12 @@ public class EvidencesController(ISender sender) : ControllerBase
         IFormFile file,
         CancellationToken ct)
     {
-        // Admin no tiene companyId en JWT; Guid.Empty se pasa como placeholder.
-        // El handler lanzará ForbiddenException hasta que Cami actualice la lógica para Admin.
-        Guid companyId = Guid.TryParse(User.FindFirstValue("companyId"), out Guid cid)
-            ? cid
-            : Guid.Empty;
+        // null = Admin (sin restricción de empresa); con valor = Company (se valida pertenencia en handler).
+        Guid? callerCompanyId = User.IsInRole("Admin") ? null : GetCompanyId();
 
         using Stream stream = file.OpenReadStream();
         EvidenceDto result = await sender.Send(
-            new UploadEvidenceCommand(projectId, companyId, stream, file.FileName, file.ContentType), ct);
+            new UploadEvidenceCommand(projectId, callerCompanyId, stream, file.FileName, file.ContentType), ct);
 
         return Ok(new { data = result, message = "Evidencia subida correctamente." });
     }

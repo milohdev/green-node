@@ -34,7 +34,9 @@ public class UploadEvidenceCommandHandler : IRequestHandler<UploadEvidenceComman
             .FirstOrDefaultAsync(p => p.Id == request.ProjectId, ct)
             ?? throw new NotFoundException(nameof(Project), request.ProjectId);
 
-        if (project.CompanyId != request.CompanyId)
+        // Solo se valida pertenencia si el caller es una Company.
+        // Admin (CallerCompanyId == null) puede subir evidencia a cualquier proyecto.
+        if (request.CallerCompanyId is not null && project.CompanyId != request.CallerCompanyId)
             throw new ForbiddenException("No tienes acceso a este proyecto.");
 
         string photoKey = await _storageService.UploadEvidenceAsync(
