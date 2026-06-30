@@ -2,6 +2,7 @@ using System.Text;
 using GreenNode.Application;
 using GreenNode.Infrastructure;
 using GreenNode.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using GreenNode.WebAPI.Hubs;
 using GreenNode.WebAPI.Middlewares;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -79,6 +80,9 @@ var app = builder.Build();
 
 using (IServiceScope scope = app.Services.CreateScope())
 {
+    ApplicationDbContext db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await db.Database.MigrateAsync();
+
     DatabaseSeeder seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
     await seeder.SeedAsync();
 }
