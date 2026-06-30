@@ -7,7 +7,7 @@ public class UploadEvidenceCommandValidator : AbstractValidator<UploadEvidenceCo
     public UploadEvidenceCommandValidator()
     {
         RuleFor(x => x.ProjectId).NotEmpty();
-        RuleFor(x => x.CompanyId).NotEmpty();
+        // CallerCompanyId es nullable: null = Admin, con valor = Company. No se valida NotEmpty.
         RuleFor(x => x.FileName).NotEmpty().MaximumLength(255);
         RuleFor(x => x.ContentType)
             .NotEmpty()
