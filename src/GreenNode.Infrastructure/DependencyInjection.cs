@@ -22,6 +22,9 @@ public static class InfrastructureServiceExtensions
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
+        services.AddScoped<IApplicationDbContext>(p =>
+            p.GetRequiredService<ApplicationDbContext>());
+
         services.AddScoped<DatabaseSeeder>();
 
         // AWS SDK
@@ -34,6 +37,7 @@ public static class InfrastructureServiceExtensions
         services.AddHttpClient<AiService>();
 
         // Servicios
+        services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IClaudeAiService, AiService>();
         services.AddScoped<IStorageService, StorageService>();
         services.AddScoped<IEmailService, EmailService>();

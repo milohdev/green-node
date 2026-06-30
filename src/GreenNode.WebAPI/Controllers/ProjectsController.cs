@@ -1,7 +1,9 @@
 using System.Security.Claims;
+using GreenNode.Application.Features.Projects.Commands.UpdateProgress;
 using GreenNode.Application.Features.Projects.DTOs;
 using GreenNode.Application.Features.Projects.Queries.GetProjectById;
 using GreenNode.Application.Features.Projects.Queries.GetProjects;
+using GreenNode.WebAPI.Contracts.Projects;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -30,13 +32,13 @@ public class ProjectsController(ISender sender) : ControllerBase
         return Ok(new { data = result, message = "Proyecto obtenido." });
     }
 
-    // UpdateProgressCommand es stub en Application — pendiente de implementación por Cami
     [HttpPut("{id:guid}/progress")]
     [Authorize(Roles = "Admin")]
-    public IActionResult UpdateProgress(Guid id)
+    public async Task<IActionResult> UpdateProgress(Guid id, [FromBody] UpdateProgressRequest request, CancellationToken ct)
     {
-        return StatusCode(StatusCodes.Status501NotImplemented,
-            new { message = "Pendiente: UpdateProgressCommand no está implementado aún en Application." });
+        ProjectDetailDto result = await sender.Send(
+            new UpdateProgressCommand(id, request.ValidatedTreeCount), ct);
+        return Ok(new { data = result, message = "Progreso actualizado." });
     }
 
     private Guid GetCompanyId() =>
