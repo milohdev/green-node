@@ -1,7 +1,10 @@
 using System.Security.Claims;
 using GreenNode.Application.Common.Exceptions;
+using GreenNode.Application.Features.Companies.Commands.UpdateCompany;
 using GreenNode.Application.Features.Companies.DTOs;
 using GreenNode.Application.Features.Companies.Queries.GetCompanies;
+using GreenNode.Application.Features.Companies.Queries.GetCompanyById;
+using GreenNode.WebAPI.Contracts.Companies;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,28 +24,33 @@ public class CompaniesController(ISender sender) : ControllerBase
         return Ok(new { data = result, message = "Empresas obtenidas." });
     }
 
-    // TODO: pendiente GetCompanyByIdQuery de Cami (actualmente clase vacía sin IRequest<T>)
     [HttpGet("{id:guid}")]
-    public IActionResult GetById(Guid id)
+    public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
     {
-        if (!User.IsInRole("Admin") && GetCompanyId() != id)
+        Guid? callerCompanyId = GetCallerCompanyId();
+        if (callerCompanyId.HasValue && callerCompanyId.Value != id)
             throw new ForbiddenException("No tienes acceso a esta empresa.");
 
-        return StatusCode(StatusCodes.Status501NotImplemented,
-            new { message = "Pendiente: GetCompanyByIdQuery no está implementado aún en Application." });
+        CompanyDto result = await sender.Send(new GetCompanyByIdQuery(id, callerCompanyId), ct);
+        return Ok(new { data = result, message = "Empresa obtenida." });
     }
 
-    // TODO: pendiente UpdateCompanyCommand de Cami (actualmente clase vacía sin IRequest<T>)
     [HttpPut("{id:guid}")]
-    public IActionResult Update(Guid id)
+    public async Task<IActionResult> Update(Guid id, UpdateCompanyRequest request, CancellationToken ct)
     {
-        if (!User.IsInRole("Admin") && GetCompanyId() != id)
+        Guid? callerCompanyId = GetCallerCompanyId();
+        if (callerCompanyId.HasValue && callerCompanyId.Value != id)
             throw new ForbiddenException("No tienes acceso a esta empresa.");
 
-        return StatusCode(StatusCodes.Status501NotImplemented,
-            new { message = "Pendiente: UpdateCompanyCommand no está implementado aún en Application." });
+        CompanyDto result = await sender.Send(
+            new UpdateCompanyCommand(id, request.CompanyName, request.Phone, request.Sector, callerCompanyId), ct);
+        return Ok(new { data = result, message = "Empresa actualizada." });
     }
 
-    private Guid GetCompanyId() =>
-        Guid.Parse(User.FindFirstValue("companyId")!);
+    private Guid? GetCallerCompanyId()
+    {
+        if (User.IsInRole("Admin")) return null;
+        string? claim = User.FindFirstValue("companyId");
+        return claim is null ? null : Guid.Parse(claim);
+    }
 }
