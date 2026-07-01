@@ -22,6 +22,7 @@ jobs:
             docker build -t greennode-api:latest .
             docker stop greennode-api || true
             docker rm greennode-api || true
+            docker network connect greennode-net greennode-db 2>/dev/null || true
             docker run -d \
               --name greennode-api \
               --env-file ~/greennode.env \
@@ -29,5 +30,5 @@ jobs:
               -p 80:8080 \
               --restart unless-stopped \
               greennode-api:latest
-            sleep 5
+            sleep 8
             docker logs greennode-api --tail 20
