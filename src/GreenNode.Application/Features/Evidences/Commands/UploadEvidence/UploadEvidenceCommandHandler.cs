@@ -5,6 +5,7 @@ using GreenNode.Application.Features.Evidences.DTOs;
 using GreenNode.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace GreenNode.Application.Features.Evidences.Commands.UploadEvidence;
@@ -15,17 +16,20 @@ public class UploadEvidenceCommandHandler : IRequestHandler<UploadEvidenceComman
     private readonly IStorageService _storageService;
     private readonly IClaudeAiService _aiService;
     private readonly ILogger<UploadEvidenceCommandHandler> _logger;
+    private readonly IServiceScopeFactory _scopeFactory;
 
     public UploadEvidenceCommandHandler(
         IApplicationDbContext context,
         IStorageService storageService,
         IClaudeAiService aiService,
-        ILogger<UploadEvidenceCommandHandler> logger)
+        ILogger<UploadEvidenceCommandHandler> logger,
+        IServiceScopeFactory scopeFactory)
     {
         _context = context;
         _storageService = storageService;
         _aiService = aiService;
         _logger = logger;
+        _scopeFactory = scopeFactory;
     }
 
     public async Task<EvidenceDto> Handle(UploadEvidenceCommand request, CancellationToken ct)
@@ -47,14 +51,25 @@ public class UploadEvidenceCommandHandler : IRequestHandler<UploadEvidenceComman
         await _context.SaveChangesAsync(ct);
 
         Guid evidenceId = evidence.Id;
+        Guid projectId = request.ProjectId;
+        string capturedPhotoKey = photoKey;
+        string capturedContentType = request.ContentType;
+
         _ = Task.Run(async () =>
         {
             try
             {
-                EvidenceValidationResult result = await _aiService.ValidateEvidencePhotoAsync(
-                    photoKey, request.ContentType, CancellationToken.None);
+                using IServiceScope scope = _scopeFactory.CreateScope();
 
-                Evidence? evidenceToUpdate = await _context.Evidences
+                IClaudeAiService aiService = scope.ServiceProvider
+                    .GetRequiredService<IClaudeAiService>();
+                IApplicationDbContext context = scope.ServiceProvider
+                    .GetRequiredService<IApplicationDbContext>();
+
+                EvidenceValidationResult result = await aiService.ValidateEvidencePhotoAsync(
+                    capturedPhotoKey, capturedContentType, CancellationToken.None);
+
+                Evidence? evidenceToUpdate = await context.Evidences
                     .FindAsync(evidenceId);
 
                 if (evidenceToUpdate is not null)
@@ -64,9 +79,14 @@ public class UploadEvidenceCommandHandler : IRequestHandler<UploadEvidenceComman
                         result.EstimatedTrees, result.Observations);
 
                     if (result.IsValid && result.EstimatedTrees > 0)
-                        project.UpdateProgress(result.EstimatedTrees);
+                    {
+                        Project? projectToUpdate = await context.Projects
+                            .FindAsync(projectId);
+                        if (projectToUpdate is not null)
+                            projectToUpdate.UpdateProgress(result.EstimatedTrees);
+                    }
 
-                    await _context.SaveChangesAsync(CancellationToken.None);
+                    await context.SaveChangesAsync(CancellationToken.None);
 
                     _logger.LogInformation(
                         "✅ Evidencia {EvidenceId} validada por IA: {IsValid}, {Trees} árboles",
