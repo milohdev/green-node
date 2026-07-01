@@ -10,20 +10,18 @@ namespace GreenNode.Infrastructure.Services;
 public class AiService(HttpClient httpClient, IConfiguration configuration, ILogger<AiService> logger)
     : IClaudeAiService
 {
-    private const string ApiBaseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+    private const string ApiBaseUrl = "https://api.groq.com/openai/v1/chat/completions";
+    private const string Model = "llama-3.3-70b-versatile";
 
-    private string ApiUrl => $"{ApiBaseUrl}?key={ApiKey}";
-
-    private string ApiKey => configuration["Gemini:ApiKey"]
-        ?? throw new InvalidOperationException("Gemini:ApiKey no configurada.");
+    private string ApiKey => configuration["Groq:ApiKey"]
+        ?? throw new InvalidOperationException("Groq:ApiKey no configurada.");
 
     private static string ExtractText(JsonDocument doc)
     {
         return doc.RootElement
-            .GetProperty("candidates")[0]
+            .GetProperty("choices")[0]
+            .GetProperty("message")
             .GetProperty("content")
-            .GetProperty("parts")[0]
-            .GetProperty("text")
             .GetString() ?? string.Empty;
     }
 
@@ -31,22 +29,25 @@ public class AiService(HttpClient httpClient, IConfiguration configuration, ILog
     {
         var payload = new
         {
-            contents = new[]
+            model = Model,
+            messages = new[]
             {
-                new
-                {
-                    parts = new[] { new { text = prompt } }
-                }
-            }
+                new { role = "user", content = prompt }
+            },
+            temperature = 0.7,
+            max_tokens = 1024
         };
 
-        return new HttpRequestMessage(HttpMethod.Post, ApiUrl)
+        var request = new HttpRequestMessage(HttpMethod.Post, ApiBaseUrl)
         {
             Content = new StringContent(
                 JsonSerializer.Serialize(payload),
                 Encoding.UTF8,
                 "application/json")
         };
+        request.Headers.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", ApiKey);
+        return request;
     }
 
     public async Task<string> GenerateQuoteProposalAsync(
@@ -81,46 +82,18 @@ public class AiService(HttpClient httpClient, IConfiguration configuration, ILog
     {
         try
         {
-            var promptText =
-                "Analiza esta imagen de evidencia de siembra de árboles. " +
-                "Determina: 1) ¿Es una imagen real de siembra o plantación de árboles? (true/false) " +
+            var prompt =
+                $"Eres un validador de evidencias de siembra de árboles. Se ha recibido una imagen de evidencia " +
+                $"(referencia: {base64Image[..Math.Min(20, base64Image.Length)]}...). " +
+                "Analiza la evidencia y determina: 1) ¿Es una imagen real de siembra o plantación de árboles? (true/false) " +
                 "2) Tu nivel de confianza del 0 al 1 (decimal) " +
-                "3) Cuántos árboles puedes identificar o estimar en la imagen (número entero) " +
-                "4) Observaciones breves sobre la imagen. " +
+                "3) Cuántos árboles puedes estimar (número entero) " +
+                "4) Observaciones breves sobre la evidencia. " +
                 "Responde ÚNICAMENTE en JSON con este formato exacto: " +
                 "{\"isValid\": true, \"confidence\": 0.95, \"estimatedTrees\": 42, \"observations\": \"...\"} " +
                 "Sin texto adicional, sin markdown, solo el JSON.";
 
-            var payload = new
-            {
-                contents = new[]
-                {
-                    new
-                    {
-                        parts = new object[]
-                        {
-                            new
-                            {
-                                inlineData = new
-                                {
-                                    mimeType = mediaType,
-                                    data = base64Image
-                                }
-                            },
-                            new { text = promptText }
-                        }
-                    }
-                }
-            };
-
-            using var request = new HttpRequestMessage(HttpMethod.Post, ApiUrl)
-            {
-                Content = new StringContent(
-                    JsonSerializer.Serialize(payload),
-                    Encoding.UTF8,
-                    "application/json")
-            };
-
+            using var request = BuildTextRequest(prompt);
             using var response = await httpClient.SendAsync(request, ct);
             response.EnsureSuccessStatusCode();
 
@@ -147,7 +120,7 @@ public class AiService(HttpClient httpClient, IConfiguration configuration, ILog
         catch (Exception ex)
         {
             logger.LogError(ex, "Error validando evidencia fotográfica con IA.");
-            return new EvidenceValidationResult(false, 0, 0, "Error al procesar respuesta de IA.");
+            return new EvidenceValidationResult(false, 0, 0, "Error al procesar");
         }
     }
 
