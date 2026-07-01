@@ -29,6 +29,10 @@ public static class InfrastructureServiceExtensions
 
         // AWS SDK
         var awsOptions = configuration.GetAWSOptions();
+        awsOptions.Credentials = new Amazon.Runtime.BasicAWSCredentials(
+            configuration["AWS:AccessKey"],
+            configuration["AWS:SecretKey"]
+        );
         services.AddDefaultAWSOptions(awsOptions);
         services.AddAWSService<IAmazonS3>();
         services.AddAWSService<IAmazonSimpleEmailService>();
