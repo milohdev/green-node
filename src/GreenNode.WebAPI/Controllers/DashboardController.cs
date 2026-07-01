@@ -10,7 +10,7 @@ namespace GreenNode.WebAPI.Controllers;
 [Authorize(Roles = "Admin")]
 public class DashboardController(ISender sender) : ControllerBase
 {
-    [HttpGet("summary")]
+    [HttpGet]
     public async Task<IActionResult> GetSummary(CancellationToken ct)
     {
         DashboardSummaryDto result = await sender.Send(new GetDashboardSummaryQuery(), ct);

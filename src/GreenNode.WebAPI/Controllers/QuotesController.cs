@@ -6,16 +6,18 @@ using GreenNode.Application.Features.Quotes.DTOs;
 using GreenNode.Application.Features.Quotes.Queries.GetQuoteById;
 using GreenNode.Application.Features.Quotes.Queries.GetQuotes;
 using GreenNode.WebAPI.Contracts.Quotes;
+using GreenNode.WebAPI.Hubs;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace GreenNode.WebAPI.Controllers;
 
 [ApiController]
 [Route("api/quotes")]
 [Authorize]
-public class QuotesController(ISender sender) : ControllerBase
+public class QuotesController(ISender sender, IHubContext<DashboardHub> hubContext) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] string? statusFilter, CancellationToken ct)
@@ -41,23 +43,29 @@ public class QuotesController(ISender sender) : ControllerBase
         Guid companyId = GetCompanyId();
         QuoteDetailDto result = await sender.Send(
             new CreateQuoteCommand(companyId, request.TerritoryId, request.Sector, request.NumberOfTrees), ct);
+        await hubContext.Clients.Group("Admins")
+            .SendAsync(DashboardHubMethods.QuoteCreated, result, ct);
         return CreatedAtAction(nameof(GetById), new { id = result.Id },
             new { data = result, message = "Cotización creada." });
     }
 
-    [HttpPost("{id:guid}/approve")]
+    [HttpPut("{id:guid}/approve")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Approve(Guid id, CancellationToken ct)
     {
         QuoteDetailDto result = await sender.Send(new ApproveQuoteCommand(id), ct);
+        await hubContext.Clients.Group("Admins")
+            .SendAsync(DashboardHubMethods.QuoteApproved, result, ct);
         return Ok(new { data = result, message = "Cotización aprobada." });
     }
 
-    [HttpPost("{id:guid}/reject")]
+    [HttpPut("{id:guid}/reject")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Reject(Guid id, RejectQuoteRequest request, CancellationToken ct)
     {
         QuoteDetailDto result = await sender.Send(new RejectQuoteCommand(id, request.Reason), ct);
+        await hubContext.Clients.Group("Admins")
+            .SendAsync(DashboardHubMethods.QuoteRejected, result, ct);
         return Ok(new { data = result, message = "Cotización rechazada." });
     }
 
