@@ -1,0 +1,32 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/178-greennode
+            git pull origin main
+            docker build -t greennode-api:latest .
+            docker stop greennode-api || true
+            docker rm greennode-api || true
+            docker run -d \
+              --name greennode-api \
+              --env-file ~/greennode.env \
+              --network greennode-net \
+              -p 80:8080 \
+              --restart unless-stopped \
+              greennode-api:latest
+            docker logs greennode-api --tail 20
