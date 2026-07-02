@@ -4,6 +4,7 @@ using GreenNode.Application.Features.Quotes.DTOs;
 using GreenNode.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace GreenNode.Application.Features.Quotes.Commands.CreateQuote;
@@ -14,17 +15,20 @@ public class CreateQuoteCommandHandler : IRequestHandler<CreateQuoteCommand, Quo
     private readonly IClaudeAiService _aiService;
     private readonly IEmailService _emailService;
     private readonly ILogger<CreateQuoteCommandHandler> _logger;
+    private readonly IServiceScopeFactory _scopeFactory;
 
     public CreateQuoteCommandHandler(
         IApplicationDbContext context,
         IClaudeAiService aiService,
         IEmailService emailService,
-        ILogger<CreateQuoteCommandHandler> logger)
+        ILogger<CreateQuoteCommandHandler> logger,
+        IServiceScopeFactory scopeFactory)
     {
         _context = context;
         _aiService = aiService;
         _emailService = emailService;
         _logger = logger;
+        _scopeFactory = scopeFactory;
     }
 
     public async Task<QuoteDetailDto> Handle(CreateQuoteCommand request, CancellationToken ct)
@@ -44,18 +48,40 @@ public class CreateQuoteCommandHandler : IRequestHandler<CreateQuoteCommand, Quo
         _context.Quotes.Add(quote);
         await _context.SaveChangesAsync(ct);
 
+        Guid quoteId = quote.Id;
+        string capturedSector = request.Sector;
+        int capturedNumberOfTrees = request.NumberOfTrees;
+        string capturedTerritoryName = territory.Name;
+
         _ = Task.Run(async () =>
         {
             try
             {
-                string proposal = await _aiService.GenerateQuoteProposalAsync(
-                    request.Sector, request.NumberOfTrees, territory.Name);
-                quote.SetAiProposal(proposal);
-                await _context.SaveChangesAsync(CancellationToken.None);
+                using IServiceScope scope = _scopeFactory.CreateScope();
+
+                IClaudeAiService aiService = scope.ServiceProvider
+                    .GetRequiredService<IClaudeAiService>();
+                IApplicationDbContext context = scope.ServiceProvider
+                    .GetRequiredService<IApplicationDbContext>();
+
+                string proposal = await aiService.GenerateQuoteProposalAsync(
+                    capturedSector, capturedNumberOfTrees, capturedTerritoryName);
+
+                Quote? quoteToUpdate = await context.Quotes.FindAsync(quoteId);
+
+                if (quoteToUpdate is not null)
+                {
+                    quoteToUpdate.SetAiProposal(proposal);
+                    await context.SaveChangesAsync(CancellationToken.None);
+
+                    _logger.LogInformation(
+                        "✅ Propuesta IA generada para Quote {QuoteId}", quoteId);
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generando propuesta IA para Quote {QuoteId}", quote.Id);
+                _logger.LogError(ex,
+                    "Error generando propuesta IA para Quote {QuoteId}", quoteId);
             }
         }, CancellationToken.None);
 
